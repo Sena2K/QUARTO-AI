@@ -1,4 +1,6 @@
 import random
+
+
 class JogoQuarto:
     def __init__(self):
         self.tabuleiro = [[None] * 4 for _ in range(4)]
@@ -64,7 +66,6 @@ class IAQuarto:
         self.profundidade = profundidade
 
     def avaliar(self, jogo):
-
         linhas_jogador1 = sum(
             1 for posicoes in jogo.posicoes_vencedoras if all(jogo.tabuleiro[i][j] == 1 for i, j in posicoes))
         linhas_jogador2 = sum(
@@ -75,6 +76,7 @@ class IAQuarto:
 if __name__ == "__main__":
     jogo = JogoQuarto()
     ia = IAQuarto(profundidade=3)
+
     while True:
         jogo.exibir_tabuleiro()
         jogadas_validas = jogo.obter_jogadas_validas()
