@@ -143,7 +143,7 @@ class IAQuarto:
 
 if __name__ == "__main__":
     jogo = JogoQuarto()
-    ia = IAQuarto(profundidade=3)  # Ajustar a profundidade conforme necessário
+    ia = IAQuarto(profundidade=3)
     while True:
         jogo.exibir_tabuleiro()
         jogadas_validas = jogo.obter_jogadas_validas()
