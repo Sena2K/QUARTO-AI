@@ -46,15 +46,13 @@ class JogoQuarto:
     def obter_jogadas_validas(self):
         return [(i, j, *self.pecas_disponiveis[-1]) for i in range(4) for j in range(4) if self.tabuleiro[i][j] is None]
 
-    def fazer_jogada(self, jogada, peca_a_jogar=None):
+    def fazer_jogada(self, jogada):
         i, j, cor, altura, forma, consistencia = jogada
         if self.tabuleiro[i][j] is not None:
             raise ValueError("Jogada inválida")
 
-        # Se peca_a_jogar for fornecido, use-o, caso contrário, use a peça atual
-        peca = peca_a_jogar if peca_a_jogar is not None else self.pecas_disponiveis[-1]
         self.tabuleiro[i][j] = self.jogador_atual
-        self.pecas_disponiveis.remove(peca)  # Remover a peça que foi escolhida para jogar
+        self.pecas_disponiveis.pop()
 
         if self.jogador_venceu(self.jogador_atual):
             return self.jogador_atual
@@ -68,25 +66,20 @@ class JogoQuarto:
         while True:
             self.exibir_tabuleiro()
             jogadas_validas = self.obter_jogadas_validas()
+            print("Peça disponível:", self.pecas_disponiveis[-1])
             print("Jogadas válidas:", jogadas_validas)
             if jogadas_validas:
-                if self.jogador_atual == 1:
-                    # IA escolhe a peça para o jogador humano
-                    peca_a_jogar = ia.escolher_peca_para_jogador(self, jogadas_validas)
-                    jogada = None
-                    while jogada not in jogadas_validas:
-                        jogada = input("Digite sua jogada (linha coluna altura forma consistencia): ")
-                        try:
-                            jogada = tuple(map(int, jogada.split()))
-                            if len(jogada) != 5:
-                                raise ValueError
-                        except (ValueError, IndexError):
-                            print("Entrada inválida. Por favor, digite apenas os valores separados por espaços.")
-                            jogada = None
-                    resultado = self.fazer_jogada(jogada, peca_a_jogar)
-                else:
-                    jogada = ia.escolher_jogada(self)
-                    resultado = self.fazer_jogada(jogada)
+                jogada = None
+                while jogada not in jogadas_validas:
+                    jogada = input("Digite sua jogada (linha coluna cor altura forma consistencia): ")
+                    try:
+                        jogada = tuple(map(int, jogada.split()))
+                        if len(jogada) != 6:
+                            raise ValueError
+                    except (ValueError, IndexError):
+                        print("Entrada inválida. Por favor, digite apenas os valores separados por espaços.")
+                        jogada = None
+                resultado = self.fazer_jogada(jogada)
                 if resultado is not None:
                     if resultado == 0:
                         print("Empate!")
@@ -95,9 +88,6 @@ class JogoQuarto:
                     else:
                         print("Jogador", resultado, "venceu!")
                     break
-            else:
-                print("Nenhuma jogada válida restante. É um empate!")
-                break
 
 
 class IAQuarto:
