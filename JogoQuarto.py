@@ -11,6 +11,7 @@ class JogoQuarto:
         random.shuffle(self.pecas_disponiveis)
         self.posicoes_vencedoras = self.gerar_posicoes_vencedoras()
 
+
     def gerar_posicoes_vencedoras(self):
         posicoes_vencedoras = []
         for i in range(4):  # linhas e colunas
