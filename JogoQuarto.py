@@ -96,7 +96,7 @@ class IAQuarto:
         self.profundidade = profundidade
 
     def avaliar(self, jogo):
-        #HEURISTICA
+        # HEURISTICA
         linhas_jogador1 = sum(
             1 for posicoes in jogo.posicoes_vencedoras if all(jogo.tabuleiro[i][j] == 1 for i, j in posicoes))
         linhas_jogador2 = sum(
@@ -138,8 +138,17 @@ class IAQuarto:
                     break
             return min_eval, melhor_jogada
 
-    def escolher_jogada(self, jogo):
-        return random.choice(jogo.obter_jogadas_validas())
+    def escolher_jogada(self, jogo, escolha_peca):
+        if escolha_peca not in jogo.pecas_disponiveis:
+            raise ValueError("Peça escolhida não está disponível.")
+        
+        jogadas_validas = jogo.obter_jogadas_validas()
+        if not jogadas_validas:
+            raise ValueError("Não há jogadas válidas disponíveis.")
+
+        # Adiciona as informações da peça escolhida às jogadas válidas e escolhe aleatoriamente
+        jogadas_validas_com_peca = [(i, j, *escolha_peca) for i, j in jogadas_validas]
+        return random.choice(jogadas_validas_com_peca)[:4]  # Retorna apenas a jogada escolhida
 
 
 if __name__ == "__main__":
@@ -163,7 +172,20 @@ if __name__ == "__main__":
                         print("Entrada inválida. Por favor, digite apenas os valores separados por espaços.")
                         jogada = None
             else:
-                jogada = ia.escolher_jogada(jogo)
+                print("Peças disponíveis para a IA:", jogo.pecas_disponiveis)
+                escolha_peca = input("Escolha a peça para a IA jogar (cor altura forma consistencia): ")
+                try:
+                    escolha_peca = tuple(map(int, escolha_peca.split()))
+                    if len(escolha_peca) != 4:
+                        raise ValueError
+                except (ValueError, IndexError):
+                    print("Entrada inválida. Por favor, digite apenas os valores separados por espaços.")
+                    continue
+                try:
+                    jogada = ia.escolher_jogada(jogo, escolha_peca)
+                except ValueError as e:
+                    print(e)
+                    continue
             resultado = jogo.fazer_jogada(jogada)
             if resultado is not None:
                 if resultado == 0:
@@ -176,3 +198,4 @@ if __name__ == "__main__":
         else:
             print("Nenhuma jogada válida restante. É um empate!")
             break
+
