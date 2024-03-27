@@ -13,25 +13,6 @@ class JogoQuarto:
         self.posicoes_vencedoras = self.gerar_posicoes_vencedoras()
         self.jogadas_jogador = []  # Lista para armazenar as jogadas do jogador
 
-    def fazer_jogada(self, jogada):
-        i, j, cor, altura, forma, consistencia = jogada
-        if self.tabuleiro[i][j] is not None:
-            raise ValueError("Jogada inválida")
-
-        # Adiciona a jogada atual à lista de jogadas do jogador
-        self.jogadas_jogador.append(jogada)
-
-        self.tabuleiro[i][j] = self.jogador_atual
-        self.pecas_disponiveis.pop()
-
-        if self.jogador_venceu(self.jogador_atual):
-            return self.jogador_atual
-        elif self.empate():
-            return 0  # Empate
-        else:
-            self.jogador_atual = 3 - self.jogador_atual  # Trocar de jogador
-            return None
-
     def obter_jogadas_jogador(self):
         return self.jogadas_jogador
 
