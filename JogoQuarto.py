@@ -10,6 +10,29 @@ class JogoQuarto:
                                   for altura in range(2) for forma in range(2) for consistencia in range(2)]
         random.shuffle(self.pecas_disponiveis)
         self.posicoes_vencedoras = self.gerar_posicoes_vencedoras()
+        self.jogadas_jogador = []  # Lista para armazenar as jogadas do jogador
+
+    def fazer_jogada(self, jogada):
+        i, j, cor, altura, forma, consistencia = jogada
+        if self.tabuleiro[i][j] is not None:
+            raise ValueError("Jogada inválida")
+
+        # Adiciona a jogada atual à lista de jogadas do jogador
+        self.jogadas_jogador.append(jogada)
+
+        self.tabuleiro[i][j] = self.jogador_atual
+        self.pecas_disponiveis.pop()
+
+        if self.jogador_venceu(self.jogador_atual):
+            return self.jogador_atual
+        elif self.empate():
+            return 0  # Empate
+        else:
+            self.jogador_atual = 3 - self.jogador_atual  # Trocar de jogador
+            return None
+
+    def obter_jogadas_jogador(self):
+        return self.jogadas_jogador
 
     def gerar_posicoes_vencedoras(self):
         posicoes_vencedoras = []
@@ -35,9 +58,20 @@ class JogoQuarto:
             print()
 
     def jogador_venceu(self, jogador):
+        vetores = [
+            [self.tabuleiro[i][j] for i in range(4)] for j in range(4)
+        ]  # Transforma as colunas do tabuleiro em vetores
+
+        # Verifica se há um elemento em comum na mesma posição em todos os vetores
         for posicoes in self.posicoes_vencedoras:
-            if all(self.tabuleiro[i][j] == jogador for i, j in posicoes):
-                return True
+            elementos = [vetores[i][j] for i, j in posicoes]
+            if all(elemento == jogador for elemento in elementos):
+                # Verifica se há uma característica em comum no vetor
+                caracteristicas = set()
+                for i, j in posicoes:
+                    caracteristicas.add(self.tabuleiro[i][j])
+                if len(caracteristicas) == 1:  # Todas as peças possuem a mesma característica
+                    return True
         return False
 
     def empate(self):
@@ -54,9 +88,19 @@ class JogoQuarto:
         self.tabuleiro[i][j] = self.jogador_atual
         self.pecas_disponiveis.pop()
 
+        print("Tabuleiro após a jogada:")
+        self.exibir_tabuleiro()
+
+        print("Vetores:")
+        vetores = [[self.tabuleiro[i][j] for i in range(4)] for j in range(4)]
+        for vetor in vetores:
+            print(vetor)
+
         if self.jogador_venceu(self.jogador_atual):
+            print("Jogador", self.jogador_atual, "venceu!")
             return self.jogador_atual
         elif self.empate():
+            print("Empate!")
             return 0  # Empate
         else:
             self.jogador_atual = 3 - self.jogador_atual  # Trocar de jogador
@@ -88,7 +132,6 @@ class JogoQuarto:
                     else:
                         print("Jogador", resultado, "venceu!")
                     break
-
 
 class IAQuarto:
     def __init__(self, profundidade):
