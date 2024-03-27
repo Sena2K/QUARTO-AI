@@ -1,3 +1,4 @@
+import copy
 import sys
 import random
 
@@ -133,17 +134,66 @@ class JogoQuarto:
                         print("Jogador", resultado, "venceu!")
                     break
 
+
 class IAQuarto:
     def __init__(self, profundidade):
         self.profundidade = profundidade
 
     def avaliar(self, jogo):
-        #HEURISTICA
-        linhas_jogador1 = sum(
-            1 for posicoes in jogo.posicoes_vencedoras if all(jogo.tabuleiro[i][j] == 1 for i, j in posicoes))
-        linhas_jogador2 = sum(
-            1 for posicoes in jogo.posicoes_vencedoras if all(jogo.tabuleiro[i][j] == 2 for i, j in posicoes))
-        return linhas_jogador1 - linhas_jogador2
+        # Inicializa a pontuação para cada jogador
+        pontuacao_jogador1 = 0
+        pontuacao_jogador2 = 0
+
+        # Avalia as linhas, colunas e diagonais vitoriosas
+        for posicoes in jogo.posicoes_vencedoras:
+            elementos = [jogo.tabuleiro[i][j] for i, j in posicoes]
+            if all(elem is not None for elem in elementos):
+                jogador = elementos[0]
+                if all(elem == jogador for elem in elementos):
+                    caracteristicas = set(elementos)
+                    if len(caracteristicas) == 1:
+                        if jogador == 1:
+                            pontuacao_jogador1 += 1
+                        else:
+                            pontuacao_jogador2 += 1
+
+        # Contagem de possíveis vitórias
+        for jogador in [1, 2]:
+            for posicoes in jogo.posicoes_vencedoras:
+                vitorias_possiveis = 0
+                for i, j in posicoes:
+                    if jogo.tabuleiro[i][j] is None:
+                        if all(jogo.tabuleiro[x][y] != jogador for x, y in posicoes):
+                            vitorias_possiveis += 1
+                if jogador == 1:
+                    pontuacao_jogador1 += vitorias_possiveis
+                else:
+                    pontuacao_jogador2 += vitorias_possiveis
+
+        # Contagem de peças em linhas e colunas
+        for jogador in [1, 2]:
+            for i in range(4):
+                pecas_linha = sum(1 for j in range(4) if jogo.tabuleiro[i][j] == jogador)
+                pecas_coluna = sum(1 for j in range(4) if jogo.tabuleiro[j][i] == jogador)
+                if jogador == 1:
+                    pontuacao_jogador1 += pecas_linha + pecas_coluna
+                else:
+                    pontuacao_jogador2 += pecas_linha + pecas_coluna
+
+        # Formação de blocos de peças
+        for jogador in [1, 2]:
+            for i in range(4):
+                for j in range(4):
+                    if jogo.tabuleiro[i][j] == jogador:
+                        pecas_similares_linha = sum(1 for k in range(4) if jogo.tabuleiro[i][k] == jogador)
+                        pecas_similares_coluna = sum(1 for k in range(4) if jogo.tabuleiro[k][j] == jogador)
+                        if jogador == 1:
+                            pontuacao_jogador1 += pecas_similares_linha + pecas_similares_coluna
+                        else:
+                            pontuacao_jogador2 += pecas_similares_linha + pecas_similares_coluna
+
+        # Retorna a diferença de pontuação entre os jogadores
+        return pontuacao_jogador1 - pontuacao_jogador2
 
     def minimax(self, jogo, profundidade, jogador_maximizador, alfa, beta):
         if profundidade == 0 or jogo.jogador_venceu(1) or jogo.jogador_venceu(2) or jogo.empate():
@@ -153,10 +203,13 @@ class IAQuarto:
             max_eval = -sys.maxsize
             melhor_jogada = None
             for jogada in jogo.obter_jogadas_validas():
-                jogo.fazer_jogada(jogada)
-                eval, _ = self.minimax(jogo, profundidade - 1, False, alfa, beta)
-                jogo.tabuleiro[jogada[0]][jogada[1]] = None
-                jogo.pecas_disponiveis.append(jogada[2:])
+                # Faz uma cópia do estado do jogo antes de realizar a jogada
+                jogo_copia = copy.deepcopy(jogo)
+                jogo_copia.fazer_jogada(jogada)
+                eval, _ = self.minimax(jogo_copia, profundidade - 1, False, alfa, beta)
+                # Desfaz a jogada após a avaliação
+                jogo_copia.tabuleiro[jogada[0]][jogada[1]] = None
+                jogo_copia.pecas_disponiveis.append(jogada[2:])
                 if eval > max_eval:
                     max_eval = eval
                     melhor_jogada = jogada
@@ -168,10 +221,13 @@ class IAQuarto:
             min_eval = sys.maxsize
             melhor_jogada = None
             for jogada in jogo.obter_jogadas_validas():
-                jogo.fazer_jogada(jogada)
-                eval, _ = self.minimax(jogo, profundidade - 1, True, alfa, beta)
-                jogo.tabuleiro[jogada[0]][jogada[1]] = None
-                jogo.pecas_disponiveis.append(jogada[2:])
+                # Faz uma cópia do estado do jogo antes de realizar a jogada
+                jogo_copia = copy.deepcopy(jogo)
+                jogo_copia.fazer_jogada(jogada)
+                eval, _ = self.minimax(jogo_copia, profundidade - 1, True, alfa, beta)
+                # Desfaz a jogada após a avaliação
+                jogo_copia.tabuleiro[jogada[0]][jogada[1]] = None
+                jogo_copia.pecas_disponiveis.append(jogada[2:])
                 if eval < min_eval:
                     min_eval = eval
                     melhor_jogada = jogada
@@ -181,7 +237,8 @@ class IAQuarto:
             return min_eval, melhor_jogada
 
     def escolher_jogada(self, jogo):
-        return random.choice(jogo.obter_jogadas_validas())
+        _, melhor_jogada = self.minimax(jogo, self.profundidade, True, -sys.maxsize, sys.maxsize)
+        return melhor_jogada
 
 
 if __name__ == "__main__":
